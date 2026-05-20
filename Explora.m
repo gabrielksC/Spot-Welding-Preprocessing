@@ -107,9 +107,9 @@ dados.TCiclo(tf) = TCiclo(loc(tf), 4);
 
 Trelativo = indice;
 
-Trelativo(tf,2) = Tciclo(tf,2) - tmaximos(loc(tf),2);
-Trelativo(tf,3) = Tciclo(tf,2) - tmaximos(loc(tf),3);
-Trelativo(tf,4) = Tciclo(tf,2) - tmaximos(loc(tf),4);
+Trelativo(tf,2) = tmaximos(loc(tf),2) - TCiclo(tf,2);
+Trelativo(tf,3) = tmaximos(loc(tf),3) - TCiclo(tf,2);
+Trelativo(tf,4) = tmaximos(loc(tf),4) - TCiclo(tf,2);
 
 [tf, loc] = ismember(dados{:,2}, TCiclo(:,1));
 
