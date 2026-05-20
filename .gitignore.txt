@@ -1,0 +1,6 @@
+*.asv
+*.autosave
+slprj/
+*.mex*
+*.p
+*.fig
