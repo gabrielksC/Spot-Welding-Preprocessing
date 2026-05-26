@@ -117,10 +117,25 @@ dados.TRelativoVmax(tf) = Trelativo(loc(tf), 2);
 dados.TRelativoImax(tf) = Trelativo(loc(tf), 3);
 dados.TRelativoRmax(tf) = Trelativo(loc(tf), 4);
 
-%% derivadas
+%% derivadas maximas e minimas
+% indice, dV/dt, dI/dt, dP/dt, dR/dt 
+dx = indice;
 
-subplot(2,2,1), plot(resistencia(2:end, 1));
-subplot(2,1,2), plot(gradient(resistencia(2:end, 1)));
+% Derivadas Maxima
+for i = 1:182
+    dx(i,2) = max(diff(tensao(2:end,i)));
+    dx(i,3) = max(diff(corrente(2:end,i)));
+    dx(i,4) = max(diff(potencia(2:end,i)));
+    dx(i,5) = max(diff(resistencia(2:end,i)));
+end
+
+[tf, loc] = ismember(dados{:,2}, dx(:,1));
+
+dados.dVMax(tf) = dx(loc(tf), 2);
+dados.dIMax(tf) = dx(loc(tf), 3);
+dados.dPMax(tf) = dx(loc(tf), 4);
+dados.dRMax(tf) = dx(loc(tf), 5);
+
 
 %% salvar a tabela
 

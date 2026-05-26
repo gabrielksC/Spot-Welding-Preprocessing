@@ -96,25 +96,46 @@ for i = 1:182
     TCiclo(i,4) = (fim - inicio) * Dt;
 end
 
+[tf, loc] = ismember(dados{:,2}, TCiclo(:,1));
+
+dados.inicioCiclo(tf) = TCiclo(loc(tf), 2);
+dados.fimCiclo(tf) = TCiclo(loc(tf), 3);
+dados.TCiclo(tf) = TCiclo(loc(tf), 4);
+
 % Calculo dos tempos relativos
 [tf, loc] = ismember(TCiclo(:,1), tmaximos(:,1));
 
 Trelativo = indice;
 
-Trelativo(tf,2) = Tciclo(tf,2) - tmaximos(loc(tf),2);
-Trelativo(tf,3) = Tciclo(tf,2) - tmaximos(loc(tf),3);
-Trelativo(tf,4) = Tciclo(tf,2) - tmaximos(loc(tf),4);
-
-
+Trelativo(tf,2) = tmaximos(loc(tf),2) - TCiclo(tf,2);
+Trelativo(tf,3) = tmaximos(loc(tf),3) - TCiclo(tf,2);
+Trelativo(tf,4) = tmaximos(loc(tf),4) - TCiclo(tf,2);
 
 [tf, loc] = ismember(dados{:,2}, TCiclo(:,1));
-% Cria a coluna energia e preenche 
-dados.TCiclo(tf) = TCiclo(loc(tf), 2);
 
-%% derivadas
+dados.TRelativoVmax(tf) = Trelativo(loc(tf), 2);
+dados.TRelativoImax(tf) = Trelativo(loc(tf), 3);
+dados.TRelativoRmax(tf) = Trelativo(loc(tf), 4);
 
-subplot(2,2,1), plot(resistencia(2:end, 1));
-subplot(2,1,2), plot(gradient(resistencia(2:end, 1)));
+%% derivadas maximas e minimas
+% indice, dV/dt, dI/dt, dP/dt, dR/dt 
+dx = indice;
+
+% Derivadas Maxima
+for i = 1:182
+    dx(i,2) = max(diff(tensao(2:end,i)));
+    dx(i,3) = max(diff(corrente(2:end,i)));
+    dx(i,4) = max(diff(potencia(2:end,i)));
+    dx(i,5) = max(diff(resistencia(2:end,i)));
+end
+
+[tf, loc] = ismember(dados{:,2}, dx(:,1));
+
+dados.dVMax(tf) = dx(loc(tf), 2);
+dados.dIMax(tf) = dx(loc(tf), 3);
+dados.dPMax(tf) = dx(loc(tf), 4);
+dados.dRMax(tf) = dx(loc(tf), 5);
+
 
 %% salvar a tabela
 
