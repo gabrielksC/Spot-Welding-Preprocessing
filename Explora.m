@@ -1,3 +1,7 @@
+clc; 
+clear; 
+close all;
+
 %% Vê o tipo das colunas e modifica para leitura
 opts = detectImportOptions("Features 1.xlsx");
 opts = setvartype(opts, {'Current_kA_','ElectrodeForce_mm_', 'FileName'}, 'double');
@@ -44,7 +48,7 @@ indice = indice';
 
 energia = indice;
 
-for i = 1:182
+for i = 1:size(potencia, 2)
     energia(i,2) = sum(potencia(2:end,i)) * Dt;
 end
 
@@ -59,7 +63,7 @@ dados.Energia_J_(tf) = energia(loc(tf), 2);
 maximos = indice; 
 tmaximos = indice;
 
-for i = 1:182
+for i = 1:size(tensao, 2)
     [maximos(i,2),tmaximos(i,2)] = max(tensao(2:end,i));
     [maximos(i,3),tmaximos(i,3)] = max(corrente(2:end,i));
     [maximos(i,4),tmaximos(i,4)] = max(resistencia(2:end,i));
@@ -85,7 +89,7 @@ dados.TRmax(tf) = tmaximos(loc(tf), 4);
 
 TCiclo = indice;
 
-for i = 1:182
+for i = 1:size(potencia, 2)
     limiar = 0.1 * max(potencia(2:end,i)); % 10% do valor maximo
     
     inicio = find(potencia(2:end,i) > limiar, 1, 'first');
@@ -117,16 +121,16 @@ dados.TRelativoVmax(tf) = Trelativo(loc(tf), 2);
 dados.TRelativoImax(tf) = Trelativo(loc(tf), 3);
 dados.TRelativoRmax(tf) = Trelativo(loc(tf), 4);
 
-%% derivadas maximas e minimas
+%% derivadas maximas
 % indice, dV/dt, dI/dt, dP/dt, dR/dt 
 dx = indice;
 
 % Derivadas Maxima
-for i = 1:182
-    dx(i,2) = max(diff(tensao(2:end,i)));
-    dx(i,3) = max(diff(corrente(2:end,i)));
-    dx(i,4) = max(diff(potencia(2:end,i)));
-    dx(i,5) = max(diff(resistencia(2:end,i)));
+for i = 1:size(tensao, 2)
+    dx(i,2) = max(diff(tensao(2:end,i)) / Dt);
+    dx(i,3) = max(diff(corrente(2:end,i)) / Dt);
+    dx(i,4) = max(diff(potencia(2:end,i)) / Dt);
+    dx(i,5) = max(diff(resistencia(2:end,i)) / Dt);
 end
 
 [tf, loc] = ismember(dados{:,2}, dx(:,1));
@@ -137,6 +141,35 @@ dados.dPMax(tf) = dx(loc(tf), 4);
 dados.dRMax(tf) = dx(loc(tf), 5);
 
 
+%% Calculo dos valores RMS de tensão, corrente e potencia 
+
+RMS = indice;
+
+for i = 1:size(tensao, 2)
+    RMS(i,2) = rms(tensao(2:end,i)); 
+    RMS(i,3) = rms(corrente(2:end,i));
+    RMS(i,4) = rms(potencia(2:end,i));
+end
+
+[tf, loc] = ismember(dados{:,2}, RMS(:,1));
+
+dados.Vrms(tf) = RMS(loc(tf), 2);
+dados.Irms(tf) = RMS(loc(tf), 3);
+dados.Prms(tf) = RMS(loc(tf), 4);
+
+%% Calculo da Carga eletrica Total
+
+carga = indice;
+
+for i = 1:size(corrente, 2)
+
+    carga(i,2) = sum(corrente(2:end,i)) * Dt;
+
+end
+[tf, loc] = ismember(dados{:,2}, carga(:,1));
+
+dados.Carga_C_(tf) = carga(loc(tf), 2);
+
 %% salvar a tabela
 
-%writetable(dados, 'features.xlsx');
+writetable(dados, 'features.xlsx');

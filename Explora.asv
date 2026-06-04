@@ -117,7 +117,7 @@ dados.TRelativoVmax(tf) = Trelativo(loc(tf), 2);
 dados.TRelativoImax(tf) = Trelativo(loc(tf), 3);
 dados.TRelativoRmax(tf) = Trelativo(loc(tf), 4);
 
-%% derivadas maximas e minimas
+%% derivadas maximas
 % indice, dV/dt, dI/dt, dP/dt, dR/dt 
 dx = indice;
 
@@ -135,6 +135,24 @@ dados.dVMax(tf) = dx(loc(tf), 2);
 dados.dIMax(tf) = dx(loc(tf), 3);
 dados.dPMax(tf) = dx(loc(tf), 4);
 dados.dRMax(tf) = dx(loc(tf), 5);
+
+
+%% Calculo dos valores RMS de tensão, corrente e potencia 
+
+RMS = indice;
+
+for i = 1:182
+    RMS(i,2) = rms(tensao(2:end,i)); 
+    RMS(i,3) = rms(corrente(2:end,i));
+    RMS(i,4) = rms(potencia(2:end,i));
+end
+
+[tf, loc] = ismember(dados{:,2}, RMS(:,1));
+
+dados.Vrms(tf) = dx(loc(tf), 2);
+dados.Irms(tf) = dx(loc(tf), 3);
+dados.Prms(tf) = dx(loc(tf), 4);
+
 
 
 %% salvar a tabela

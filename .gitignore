@@ -4,3 +4,6 @@ slprj/
 *.mex*
 *.p
 *.fig
+FeatureImportance_Results.xlsx
+Resumo_Features.xlsx
+Explora.asv
