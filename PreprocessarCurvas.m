@@ -3,12 +3,7 @@ clear;
 close all;
 
 %% 1. READ BASE DATA
-% Set the import options for the base features file, specifying the data
-% type for some columns as 'double' (numeric) to prevent reading errors.
-opts = detectImportOptions("Features 1.xlsx");
-opts = setvartype(opts, {'Current_kA_','ElectrodeForce_mm_', 'FileName'}, 'double');
 
-% 'curves' contains the voltage and current time series for each weld.
 curves = readtable('Curvas.xlsx');
 
 %% 2. SEPARATE VOLTAGE AND CURRENT CURVES
@@ -52,9 +47,9 @@ for i = 1:size(current, 2)
 end
 %% Plot teste
 
-plot(Pre_SoldaA(2:1:end,1))
+plot(Pre_SoldaV(2:1:end,1)*1e3)
 hold on 
-plot(current(2:1:end,1))
+plot(Pre_SoldaA(2:1:end,1))
 yline(threshold,'--', '10%')
 hold off
 
