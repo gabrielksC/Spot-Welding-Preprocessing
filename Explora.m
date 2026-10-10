@@ -22,7 +22,7 @@ opts = setvartype(opts, {'Current_kA_','ElectrodeForce_mm_', 'FileName'}, 'doubl
 % 'data' contains the initial feature table.
 % 'curves' contains the voltage and current time series for each weld.
 data = readtable('Features 1.xlsx', opts);
-curves = readtable('Curvas.xlsx');
+curves = readtable('CurvaFiltradaSolda.xlsx');
 
 %% Initial statistical summary of the data
 summary(data);
@@ -40,8 +40,8 @@ current(2,:) = [];
 %% 3. FORMAT CONVERSION
 % Convert the extracted tables (cell arrays of strings) into numeric matrices,
 % and convert current from kA to A (multiplying by 1000).
-voltage = cellfun(@str2double, table2cell(voltage));
-current = cellfun(@str2double, table2cell(current)) * 1e3;
+voltage = table2array(voltage);
+current = table2array(current);
 
 %% 4. SAMPLING FREQUENCY DEFINITION
 % Dt is the time interval between each measured point. 
@@ -164,9 +164,9 @@ data.dRMax(tf) = dx(loc(tf), 5);
 RMS = index;
 
 for i = 1:size(voltage, 2)
-    RMS(i,2) = rms(voltage(2:end,i)); 
-    RMS(i,3) = rms(current(2:end,i));
-    RMS(i,4) = rms(power(2:end,i));
+    RMS(i,2) = rms(voltage(2:end,i), 'omitnan'); 
+    RMS(i,3) = rms(current(2:end,i), 'omitnan');
+    RMS(i,4) = rms(power(2:end,i), 'omitnan');
 end
 
 [tf, loc] = ismember(data{:,2}, RMS(:,1));
@@ -180,7 +180,7 @@ data.Prms(tf) = RMS(loc(tf), 4);
 charge = index;
 
 for i = 1:size(current, 2)
-    charge(i,2) = sum(current(2:end,i)) * Dt;
+    charge(i,2) = sum(current(2:end,i), 'omitnan') * Dt;
 end
 
 [tf, loc] = ismember(data{:,2}, charge(:,1));
@@ -190,4 +190,4 @@ data.Charge_C_(tf) = charge(loc(tf), 2);
 % The final "features.xlsx" file will contain the initial machine attributes
 % plus all the waveform attributes (energy, RMS, derivatives, times) 
 % that we just calculated. It will be the input for the Machine Learning models scripts.
-writetable(data, 'features.xlsx');
+writetable(data, 'featuresSoldaFiltrada.xlsx');

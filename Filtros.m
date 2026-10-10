@@ -84,81 +84,82 @@ CurvasFiltradasPreESolda(:,1:2:end) = SoldaV_filtrada;
 CurvasFiltradasPreESolda(:,2:2:end) = SoldaA_filtrada;
 
 CurvasFiltradasPreESolda = [CurvasFiltradasPreESolda(1,:); zeros(1,size(CurvasFiltradasPreESolda,2)); CurvasFiltradasPreESolda(2:end,:)];
-writematrix(CurvasFiltradasPreESolda, 'CurvaFiltradaPreESolda.xlsx');
+
+
+writematrix(CurvasFiltradasPreESolda, 'CurvaFiltradaSolda.xlsx');
 
 %% DWT
-
-%% DWT - Exemplo
-
 % Frequência de amostragem
 Fs = 25.6e3;
 
-% Escolher a solda
-i = 180;
+DWT = current(1,:)';
+%%
 
-% Pegar somente os dados da solda
-sinal = current(2:end,i);
+for i = 1:size(current,2)
+    sinal = current(2:end,i);
+    % Remover NaN
+    sinal = sinal(~isnan(sinal));
 
-% Remover NaN
-sinal = sinal(~isnan(sinal));
+    % DWT
 
-%% DWT
+    nivel = 5;
+    wavelet = 'db4';
 
-nivel = 5;
-wavelet = 'db4';
+    [C,L] = wavedec(sinal, nivel, wavelet);
 
-[C,L] = wavedec(sinal, nivel, wavelet);
+    % Separar os coeficientes
 
-%% Separar os coeficientes
+    D1 = detcoef(C,L,1);
+    D2 = detcoef(C,L,2);
+    D3 = detcoef(C,L,3);
+    D4 = detcoef(C,L,4);
+    D5 = detcoef(C,L,5);
 
-D1 = detcoef(C,L,1);
-D2 = detcoef(C,L,2);
-D3 = detcoef(C,L,3);
-D4 = detcoef(C,L,4);
-D5 = detcoef(C,L,5);
+    A5 = appcoef(C,L,wavelet,5);
 
-A5 = appcoef(C,L,wavelet,5);
+    % Reconstrução dos componentes da DWT
 
-%% Plotar os coeficientes
+    A5_rec = wrcoef('a', C, L, wavelet, 5);
 
-figure
+    D1_rec = wrcoef('d', C, L, wavelet, 1);
+    D2_rec = wrcoef('d', C, L, wavelet, 2);
+    D3_rec = wrcoef('d', C, L, wavelet, 3);
+    D4_rec = wrcoef('d', C, L, wavelet, 4);
+    D5_rec = wrcoef('d', C, L, wavelet, 5);
 
-subplot(6,1,1)
-plot(A5)
-title('A5 - Aproximação')
+    E_A5 = sum(A5_rec.^2);
 
-subplot(6,1,2)
-plot(D5)
-title('D5')
+    E_D1 = sum(D1_rec.^2);
+    E_D2 = sum(D2_rec.^2);
+    E_D3 = sum(D3_rec.^2);
+    E_D4 = sum(D4_rec.^2);
+    E_D5 = sum(D5_rec.^2);
 
-subplot(6,1,3)
-plot(D4)
-title('D4')
+    E_total = E_A5 + E_D1 + E_D2 + E_D3 + E_D4 + E_D5;
 
-subplot(6,1,4)
-plot(D3)
-title('D3')
+    DWT(i,2) = 100*E_A5/E_total;
+    DWT(i,3) = 100*E_D5/E_total;
+    DWT(i,4) = 100*E_D4/E_total;
+    DWT(i,5) = 100*E_D3/E_total;
+    DWT(i,6) = 100*E_D2/E_total;
+    DWT(i,7) = 100*E_D1/E_total;
 
-subplot(6,1,5)
-plot(D2)
-title('D2')
-
-subplot(6,1,6)
-plot(D1)
-title('D1')
-
-xlabel('Amostras')
+end
+%% Salvar DWT junto com as features da solda 
+features = readtable('featuresSoldaFiltrada.xlsx');
 
 %%
-%% Reconstrução dos componentes da DWT
 
-A5_rec = wrcoef('a', C, L, wavelet, 5);
+[tf, loc] = ismember(features{:,2}, DWT(:,1));
+features.E_A5(tf) = DWT(loc(tf), 2);
+features.E_D5(tf) = DWT(loc(tf), 3);
+features.E_D4(tf) = DWT(loc(tf), 4);
+features.E_D3(tf) = DWT(loc(tf), 5);
+features.E_D2(tf) = DWT(loc(tf), 6);
+features.E_D1(tf) = DWT(loc(tf), 7);
 
-D1_rec = wrcoef('d', C, L, wavelet, 1);
-D2_rec = wrcoef('d', C, L, wavelet, 2);
-D3_rec = wrcoef('d', C, L, wavelet, 3);
-D4_rec = wrcoef('d', C, L, wavelet, 4);
-D5_rec = wrcoef('d', C, L, wavelet, 5);
+writetable(features, 'featuresSoldaFiltradaDWT.xlsx');
+
 
 %%
 figure
@@ -193,25 +194,8 @@ title('D1 - Alta frequência')
 
 xlabel('Amostras')
 
-%%
-E_A5 = sum(A5_rec.^2);
+%% FFT
 
-E_D1 = sum(D1_rec.^2);
-E_D2 = sum(D2_rec.^2);
-E_D3 = sum(D3_rec.^2);
-E_D4 = sum(D4_rec.^2);
-E_D5 = sum(D5_rec.^2);
-
-E_total = E_A5 + E_D1 + E_D2 + E_D3 + E_D4 + E_D5;
-
-fprintf('A5: %.2f %%\n', 100*E_A5/E_total);
-fprintf('D5: %.2f %%\n', 100*E_D5/E_total);
-fprintf('D4: %.2f %%\n', 100*E_D4/E_total);
-fprintf('D3: %.2f %%\n', 100*E_D3/E_total);
-fprintf('D2: %.2f %%\n', 100*E_D2/E_total);
-fprintf('D1: %.2f %%\n', 100*E_D1/E_total);
-
-%%
 N = length(sinal);
 
 Y = fft(sinal - mean(sinal));
