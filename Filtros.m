@@ -195,6 +195,10 @@ title('D1 - Alta frequência')
 xlabel('Amostras')
 
 %% FFT
+i = 116;
+sinal = current(2:end,i);
+% Remover NaN
+sinal = sinal(~isnan(sinal));
 
 N = length(sinal);
 
@@ -211,4 +215,52 @@ xlim([0 5000])
 grid on
 xlabel('Frequência [Hz]')
 ylabel('Amplitude')
+title('Espectro da corrente')
+
+%%
+Fs = 25.6e3;
+
+FFT = current(1,:)';
+
+for i = 1:size(current,2)
+    sinal = current(2:end, i);
+    % Remover NaN
+    sinal = sinal(~isnan(sinal));
+
+
+    N = length(sinal);
+    
+    Y = fft(sinal - mean(sinal));
+    
+    P2 = abs(Y/N);
+    P1 = P2(1:floor(N/2)+1);
+    
+    f = Fs*(0:floor(N/2))/N;
+
+    [FFT(i,2), idx] = max(P1);
+    FFT(i,3) = f(idx);
+    
+end
+%%
+
+%% Salvar FFT junto com as features da solda 
+features = readtable('featuresSoldaFiltradaDWT.xlsx');
+
+%%
+
+[tf, loc] = ismember(features{:,2}, FFT(:,1));
+features.FFT_A(tf) = FFT(loc(tf), 2);
+features.FFT_F(tf) = FFT(loc(tf), 3);
+
+writetable(features, 'featuresSoldaFiltradaDWTFFT.xlsx');
+%%
+figure
+plot(FFT(:,2))
+hold on 
+plot(FFT(:,3))
+hold off
+grid on
+xlabel('Índice da amostra')
+ylabel('Valor')
+legend('Frequência [Hz]','Amplitude')
 title('Espectro da corrente')
